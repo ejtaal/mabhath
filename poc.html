@@ -22,9 +22,10 @@ hr { margin: 5px; }
 <!--
 http://www.openjs.com/scripts/events/keyboard_shortcuts/
 -->
-<script type="text/javascript" src="jquery.js"></script>
-<script type="text/javascript" src="jquery.ba-hashchange.min.js"></script>
-<script type="text/javascript" src="shortcut.js"></script>
+<script type="text/javascript" src="jslib/jquery.js"></script>
+<script type="text/javascript" src="jslib/jquery.ba-hashchange.min.js"></script>
+<script type="text/javascript" src="jslib/shortcut.js"></script>
+<script type="text/javascript" src="jslib/xregexp-all-min.js"></script>
 <!--
 <script type="text/javascript" src="aa-ll-data.js"></script>
 <script type="text/javascript" src="aa-ls-data.js"></script>
@@ -34,17 +35,9 @@ http://www.openjs.com/scripts/events/keyboard_shortcuts/
 
 <div id=text style=' display: none;'>
 This is some text. Please note it's lots of text. Try clicking on a word.
-This is some text. Please note it's lots of text. Try clicking on a word.
-This is some text. Please note it's lots of text. Try clicking on a word.
-This is some text. Please note it's lots of text. Try clicking on a word.
-This is some text. Please note it's lots of text. Try clicking on a word.
-This is some text. Please note it's lots of text. Try clicking on a word.
-This is some text. Please note it's lots of text. Try clicking on a word.
-This is some text. Please note it's lots of text. Try clicking on a word.
-This is some text. Please note it's lots of text. Try clicking on a word.
-This is some text. Please note it's lots of text. Try clicking on a word.
-This is some text. Please note it's lots of text. Try clicking on a word.
-This is some text. Please note it's lots of text. Try clicking on a word.
+كتب ضرب ملك شرح نصح كور وكر
+
+روه ريغ
 </div>
 
 <hr>
@@ -79,6 +72,7 @@ var layer_bgcolors = [ 'black', "#ddf", "#ffd",   "#dfd" , "#fdd", "#fdf"];
 	http://the.url/page.html#0_32,blah,1_32,nice
 */
 var layers = new Array();
+var dictionaries = new Array();
 
 // main()
 // Load initial test data:
@@ -97,6 +91,15 @@ $(window).hashchange( function(){
 
 // ========= End of main() =========
 // Only subroutines below. Beware!
+
+function register_dictionary( index, shortname, displayname, dirname, description) {
+	//debug( name);
+	//debug( contents);
+	dictionaries[dictionaries.length] = { 
+		"shortname": shortname, "displayname": displayname, 
+		"dirname": dirname, "index": index, "description": description };
+	//debug( dictionaries);
+}
 
 function set_layer( word, zindex) {
 	layers[zindex] = []; //empty or create
@@ -162,7 +165,7 @@ function create_layer( zindex, clicked_word, word_on_top ) {
 	var new_layer = "layer_" + zindex;
 	$('body').append("<div id=" + new_layer + "></div>");
 	$("#" + new_layer).html($("#template").html());
-	$("#" + new_layer + " span.text" ).text( $("#text").text());
+	$("#" + new_layer + " span.text" ).text( get_dict_contents( word_on_top, "lisan"));
 	$("#" + new_layer + " span.choice" ).text( word_on_top);
 	$("#" + new_layer + " span.choice" ).css( 'border', '3px solid ' + layer_colors[zindex]);
 	spanify_text( "#" + new_layer + " span.text", zindex);
@@ -198,19 +201,64 @@ debug(layers);
       'color' : 'rgb(0,40,244)',
 	*/
 }
+	
+function get_dict_contents( word, which_dictionaries) {
+	// Choose which dictionaries you want/don't want by setting which_dictionaries to something
+	// Returned html should be a concatenation of filled out templates
+	var html_to_return = "";
+	for ( i = 0; i < dictionaries.length; i++) {
+		debug(i + ': ' + dictionaries[i]["shortname"]);
+		var path = dictionaries[i]["dirname"] + '/' + word.substr(0,1) + '/' + word + '.txt';
+		debug( path);
+		$.get( path, function(data){ html_to_return = data; }) ;
+
+		debug( html_to_return);
+    $.ajax({
+        url: path,
+        type: 'get',
+        dataType: 'text',
+        async: false,
+        success: function(data) {
+            html_to_return = data;
+        }
+    });
+		debug( html_to_return);
+    html_to_return = $.ajax({
+        url: path,
+        type: 'get',
+        dataType: 'text',
+        async: false,
+        success: function(data) {
+            html_to_return = data;
+        }
+    }).responseText;
+		debug( html_to_return);
+	}
+}
 
 function spanify_text( id, source_layer) {
 	//debug( 'id: ' + id + ' sl: ' + source_layer);
 	var word_count = 0;
 	target = source_layer + 1;
+	// Works for westerns \w+ only:
 	$(id).html(
-		$(id).text().replace( /(\w+)/g, function( word) {	
+		$(id).text().replace( /([^\s:;,\.\(\)\{\}\[\]]+)/g, function( word) {	
 			return '<span class=span_' + source_layer + ' id="' + source_layer + '_' + ++word_count + '" '
 				+ 'onClick="javascript:set_layer(this,'+source_layer+')">' + word + '</span>';
 				//+ 'onClick="javascript:set_layer(this,'+target+')">' + word + '</span>';
 		})
 	);
+
 	/*
+	$(id).html(
+		XRegExp.forEach( $("#input").text(), XRegExp('[\\p{Arabic}\\p{M}]+'), function(match, i) {
+			//if (i % 2) this.push(+match[0]);
+			//debug(match);
+			stem(match[0]);
+		}, []);
+	);
+
+
 	$(id + ' span').click(function() {
 	  	//alert("Handler for .click() called.");
 			//debug(target);
@@ -284,6 +332,7 @@ function dump(arr,level) {
 }
 
 </script>
-
+<!-- now try to load all the dictionaries -->
+<script type="text/javascript" src="lisan.js"></script>
 </body>
 </html>

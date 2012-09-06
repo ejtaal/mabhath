@@ -115,7 +115,7 @@ print "Dumping entries to files:\n";
 use Term::ProgressBar;
 my $pbar = Term::ProgressBar->new({count => scalar keys %dict_entries });
 my $i = 0;
-my $js_script = "var myCars=new Array(";
+my $js_script = "var a=new Array(";
 foreach my $entry_name ( sort keys %dict_entries) {
 	my $output_subdir = $output_dir	. '/' . substr( $entry_name, 0, 1);
 	my $output_path   = $output_subdir	. '/' . $entry_name .'.txt';
@@ -127,6 +127,7 @@ foreach my $entry_name ( sort keys %dict_entries) {
 	$js_script .= "\"$entry_name\",";
 	if (++$i % 25 == 0) { $pbar->update($i) };
 }
+
 print "Done.\n";
 chop $js_script;
 $js_script .= ");\n";

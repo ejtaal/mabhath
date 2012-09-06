@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SRC=/home/taal/projects/mabhath/source/
+SRC="$(dirname $0)/source/"
 OUT=/mnt/ramfs/mabhath/
 cd $SRC || exit 1
 
@@ -26,15 +26,15 @@ for dir in `find * -type d`; do
 			abiword --to=txt -o "$converted" "$i"
 			echo -n "abiword done. "
 		fi
-		converted="${i%%.doc}.soffice.txt"
-		if [ -f "$converted" ]; then
-			echo -n "(soffice cached) "
-		else
-			echo	soffice --headless --convert-to txt:text --outdir "$dir" "$i"
-			soffice_output="${i%%.doc}.txt"
-			mv -vf "$soffice_output" "$converted"
-			echo -n "soffice done. "
-		fi
+#		converted="${i%%.doc}.soffice.txt"
+#		if [ -f "$converted" ]; then
+#			echo -n "(soffice cached) "
+#		else
+#			echo	soffice --headless --convert-to txt:text --outdir "$dir" "$i"
+#			soffice_output="${i%%.doc}.txt"
+#			mv -vf "$soffice_output" "$converted"
+#			echo -n "soffice done. "
+#		fi
 		echo conversions done.
 	done
 		
