@@ -34,7 +34,7 @@ http://www.openjs.com/scripts/events/keyboard_shortcuts/
 </textarea>
 
 <div id=text style=' display: none;'>
-This is some text. Please note it's lots of text. Try clicking on a word.
+This is some text. Try clicking on a word.
 كتب ضرب ملك شرح نصح كور وكر
 
 روه ريغ
@@ -57,9 +57,21 @@ The Word
 
 </div>
 
+<h4>About</h4>
+Browser compatibility:<p>
+<table>
+<tr><th>Browser						<th>works online<th>offline<th>Notes</tr>
+<tr><td>Opera (desktop)		<td>yes					<td>yes	but:<td>For offline use you need to enable the following:
+<a href="opera:config#UserPrefs|AllowFileXMLHttpRequest">opera:config#UserPrefs|AllowFileXMLHttpRequest</a>
+<tr><td>Firefox (desktop)	<td>yes					<td>yes	<td>Works by default
+<tr><td>Chrome						<td>yes					<td>yes but:<td>For desktop use, chrome must be run with the following parameter:  --allow-file-access-from-files (put this after chrome.exe or google-chrome on the commandline if you're running windows or linux respectively)
+</tr></table>
+
+</p>
 
 <script>
 
+var debug_msg = 0;
 var current_layer = 0;
 var layer_colors =   [ 'pink', "blue", "yellow", "green", "red", "purple"];
 var layer_bgcolors = [ 'black', "#ddf", "#ffd",   "#dfd" , "#fdd", "#fdf"];
@@ -104,7 +116,10 @@ function register_dictionary( index, shortname, displayname, dirname, descriptio
 function set_layer( word, zindex) {
 	layers[zindex] = []; //empty or create
 	layers[zindex][0] = $(word).attr('id');
-	layers[zindex][1] = $(word).text();
+	var stemmed_word = stem( $(word).text());
+	debug( 'Stem result: ' + $(word).text() + ' -> ' + stemmed_word);
+	layers[zindex][1] = stemmed_word
+	//layers[zindex][2] = stem($(word).text());
 	for (i = layers.length; i > zindex; i--) {
 		layers.splice( i, 1);
 		$("#" + "layer_" + i).remove();
@@ -156,46 +171,55 @@ function parse_hash() {
 }
 
 function create_layer( zindex, clicked_word, word_on_top ) {
-	//debug( zindex + ' ' + clicked_word + ' ' + word_on_top + ' ' + layer_colors[zindex]);
-	$('#' + clicked_word).siblings().css('background-color', 'inherit');
-	$('#' + clicked_word).siblings().css('border', 'none');
-	$('#' + clicked_word).css('background-color', layer_bgcolors[zindex]);
-	$('#' + clicked_word).css('border', '1px solid ' + layer_colors[zindex]);
-  //debug( $('#'+clicked_word).text() );
-	var new_layer = "layer_" + zindex;
-	$('body').append("<div id=" + new_layer + "></div>");
-	$("#" + new_layer).html($("#template").html());
-	$("#" + new_layer + " span.text" ).text( get_dict_contents( word_on_top, "lisan"));
-	$("#" + new_layer + " span.choice" ).text( word_on_top);
-	$("#" + new_layer + " span.choice" ).css( 'border', '3px solid ' + layer_colors[zindex]);
-	spanify_text( "#" + new_layer + " span.text", zindex);
-	$("#" + new_layer + " span.close_layer" ).click(function() {
-	  	//alert("Handler for .click() called.");
-			$('#' + clicked_word).css('background-color', 'inherit');
-			$('#' + clicked_word).css('border', 'none');
-			//console.log( layers);
-			//console.log( layers);
-debug(layers);
-			for (i = layers.length; i >= zindex - 1; i--) {
-				layers.splice( i, 1);
-				$("#" + "layer_" + i).remove();
-				debug("#" + "layer_" + i);
-			}
-debug(layers);
-			build_hash();
-			//console.log( layers);
-		});
- 	//onClick="javascript:close_layer(this,1)"
-	var cssObj = {
-			'position' : 'absolute',
-      'background-color' : layer_bgcolors[zindex],
-			'border' : '1px solid ' + layer_colors[zindex],
-			'border-top' : '3px solid ' + layer_colors[zindex],
-			'z-index' : zindex,
-			'width' : '99%',
-			'top' : $('#' + clicked_word).offset().top + $('#' + clicked_word).height() * 3
-    }
-	$("#" + new_layer).css(cssObj);
+	// If any info is found for word_on_top then continue, else show some sort of warning
+	var dict_contents = get_dict_contents( word_on_top, "lisan");
+	if ( dict_contents.hits == 0) {
+		debug('No content whatsoever found for: ' + word_on_top);
+		$('#' + clicked_word).css('background-color', 'white');
+		$('#' + clicked_word).css('border', '1px solid black');
+	} else {
+		layer_contents = dict_contents.html;
+		//debug( zindex + ' ' + clicked_word + ' ' + word_on_top + ' ' + layer_colors[zindex]);
+		$('#' + clicked_word).siblings().css('background-color', 'inherit');
+		$('#' + clicked_word).siblings().css('border', 'none');
+		$('#' + clicked_word).css('background-color', layer_bgcolors[zindex]);
+		$('#' + clicked_word).css('border', '1px solid ' + layer_colors[zindex]);
+	  //debug( stem( $('#'+clicked_word).text()) );
+		var new_layer = "layer_" + zindex;
+		$('body').append("<div id=" + new_layer + "></div>");
+		$("#" + new_layer).html($("#template").html());
+		$("#" + new_layer + " span.text" ).html( layer_contents);
+		$("#" + new_layer + " span.choice" ).text( word_on_top);
+		$("#" + new_layer + " span.choice" ).css( 'border', '3px solid ' + layer_colors[zindex]);
+		spanify_text( "#" + new_layer + " span.text", zindex);
+		$("#" + new_layer + " span.close_layer" ).click(function() {
+		  	//alert("Handler for .click() called.");
+				$('#' + clicked_word).css('background-color', 'inherit');
+				$('#' + clicked_word).css('border', 'none');
+				//console.log( layers);
+				//console.log( layers);
+	debug(layers);
+				for (i = layers.length; i >= zindex - 1; i--) {
+					layers.splice( i, 1);
+					$("#" + "layer_" + i).remove();
+					debug("#" + "layer_" + i);
+				}
+	debug(layers);
+				build_hash();
+				//console.log( layers);
+			});
+	 	//onClick="javascript:close_layer(this,1)"
+		var cssObj = {
+				'position' : 'absolute',
+	      'background-color' : layer_bgcolors[zindex],
+				'border' : '1px solid ' + layer_colors[zindex],
+				'border-top' : '3px solid ' + layer_colors[zindex],
+				'z-index' : zindex,
+				'width' : '99%',
+				'top' : $('#' + clicked_word).offset().top + $('#' + clicked_word).height() * 3
+	    }
+		$("#" + new_layer).css(cssObj);
+	}
 
 	/*
       'color' : 'rgb(0,40,244)',
@@ -206,14 +230,41 @@ function get_dict_contents( word, which_dictionaries) {
 	// Choose which dictionaries you want/don't want by setting which_dictionaries to something
 	// Returned html should be a concatenation of filled out templates
 	var html_to_return = "";
+	var hits = 0;
 	for ( i = 0; i < dictionaries.length; i++) {
+		html_to_return += '<b>' + dictionaries[i]["displayname"] + '</b><p>';
+		if ( $.inArray( word, dictionaries[i]["index"]) > -1 ) {
+			hits++;
+			var path = dictionaries[i]["dirname"] + '/' + word.substr(0,1) + '/' + word + '.txt';
+			debug( path);
+			html_to_return += 
+				$.ajax({
+	        url: path,
+	        type: 'get',
+	        dataType: 'text',
+	        async: false,
+	        success: null
+	    	}).responseText;
+		} else {
+			debug( "'" + word + "' not found in dictionary: " + dictionaries[i]["shortname"]);
+			html_to_return += '(root not found in this dictionary)';
+		}
+    /*
 		debug(i + ': ' + dictionaries[i]["shortname"]);
-		var path = dictionaries[i]["dirname"] + '/' + word.substr(0,1) + '/' + word + '.txt';
-		debug( path);
+		
+		html_to_return += '<b>' + dictionaries[i]["displayname"] + '</b><br>' 
+			+ $.ajax({
+        url: path,
+        type: 'get',
+        dataType: 'text',
+        async: false,
+        success: null
+    		}).responseText;
 		$.get( path, function(data){ html_to_return = data; }) ;
-
-		debug( html_to_return);
-    $.ajax({
+		debug( "method 1: " + html_to_return);
+		html_to_return = "";
+    
+		$.ajax({
         url: path,
         type: 'get',
         dataType: 'text',
@@ -222,18 +273,26 @@ function get_dict_contents( word, which_dictionaries) {
             html_to_return = data;
         }
     });
-		debug( html_to_return);
-    html_to_return = $.ajax({
+		debug( "method 2: " + html_to_return);
+		html_to_return = "";
+    
+		html_to_return = $.ajax({
         url: path,
-        type: 'get',
+        type: 'post',
         dataType: 'text',
         async: false,
         success: function(data) {
-            html_to_return = data;
+            //html_to_return = data;
         }
     }).responseText;
-		debug( html_to_return);
+		debug( "method 4: " + html_to_return);
+		*/
 	}
+	debug( 'hits: ' + hits);
+	return {
+		'hits': hits,
+		'html': html_to_return
+	};
 }
 
 function spanify_text( id, source_layer) {
@@ -241,13 +300,15 @@ function spanify_text( id, source_layer) {
 	var word_count = 0;
 	target = source_layer + 1;
 	// Works for westerns \w+ only:
+		//$(id).html().replace( /([^<>\s:;,\.\(\)\{\}\[\]]+)/g, function( word) {	
 	$(id).html(
-		$(id).text().replace( /([^\s:;,\.\(\)\{\}\[\]]+)/g, function( word) {	
+		$(id).html().replace( XRegExp('[\\p{Arabic}\\p{M}]+', 'g'), function( word) {	
 			return '<span class=span_' + source_layer + ' id="' + source_layer + '_' + ++word_count + '" '
 				+ 'onClick="javascript:set_layer(this,'+source_layer+')">' + word + '</span>';
 				//+ 'onClick="javascript:set_layer(this,'+target+')">' + word + '</span>';
 		})
 	);
+	//if ( target==2) $(id).html("BLAH:<i>italic</i>");
 
 	/*
 	$(id).html(
@@ -291,7 +352,8 @@ function spanify_text( id, source_layer) {
 
 
 function debug( obj) {
-	$('#debug').prepend( dump(obj) + "<br>");
+	debug_msg++;
+	$('#debug').prepend( '#' + debug_msg + ' ' + dump(obj) + "<br>");
 	//console.log( str);
 }
 
@@ -330,6 +392,111 @@ function dump(arr,level) {
 	}
 	return dumped_text;
 }
+
+function stem( input) {
+	var showdebug = 1;
+	var stem = input;
+	var candidate_roots = [];
+	// Stemming step 1. Strip diacritics
+	var stem = XRegExp.replace( stem, XRegExp('\\p{M}', 'g'), '');
+	debug( 'step 1. : ' + input + ' -> ' + stem);
+	// Stemming step 2. remove length three and length two prefixes/suffixes in this order
+	if (stem.length >= 6) { stem = stem.replace( /^(كال|بال|ولل|وال)(.*)$/i, "$2"); }
+	if (stem.length >= 5) { stem = stem.replace( /^(ال|لل)(.*)$/i, "$2"); }
+	debug( 'step 2. : ' + stem);
+	// Stemming step 3. remove length three and length two suffixes in this order
+	if (stem.length >= 6) { stem = stem.replace( /^(.*)(تما|هما|تان|تين|كما)$/i, "$1"); }
+	if (stem.length >= 5) { stem = stem.replace( /^(.*)(ون|ات|ان|ين|تن|كم|هن|نا|يا|ها|تم|كن|ني|وا|ما|هم)$/i, "$1"); }
+	debug( 'step 3. : ' + stem);
+	// Stemming step 4. remove initial waw if found
+	if (stem.length >= 4) { stem = stem.replace( /^وو/i, 'و'); }
+	debug( 'step 4. : ' + stem);
+	// Stemming step 5. normalize initial hamza to bare alif
+	if (stem.length >= 4) { stem = stem.replace( /^[آأإ]/i, 'ا'); }
+																									debug( 'step 5. : ' + stem);
+	if (stem.length <= 3) {
+		return stem;
+	}
+
+	// Stemming step 6. process length four patterns and extract length three roots
+	if (stem.length == 6) { 
+		stem = stem.replace( /^[ام]ست(...)$/i, "$1");         // مستفعل - استفعل
+		stem = stem.replace( /^[ام]ست(...)$/i, "$1");         // مستفعل - استفعل
+		stem = stem.replace( /^[تم](.)ا(.)ي(.)$/i, "$1$2$3"); // تفاعيل - مفاعيل
+		stem = stem.replace( /^م(..)ا(.)ة$/i, "$1$2");      // مفعالة
+		stem = stem.replace( /^ا(.)[تط](.)ا(.)$/i, "$1$2$3");    // افتعال
+		stem = stem.replace( /^ا(.)(.)و\2(.)$/i, "$1$2$3"); // افعوعل
+		if (stem.length == 3 ) { return stem; }
+		else {
+
+
+			stem = stem.replace( /[ةهيكتان]$/i, "");     // single letter suffixes
+			//if (stem.length == 4 ) { TODO: initiate 4 letter word routine? }
+			//if (stem.length == 5 ) { TODO: initiate 5 letter word routine? }
+			stem = stem.replace( /^(..)ا(..)$/i, "$1$2");   // فعالل
+			stem = stem.replace( /^ا(...)ا(.)$/i, "$1$2");  // افعلال
+			stem = stem.replace( /^مت(.۔..)$/i, "$1");      // متفعلل
+
+			stem = stem.replace( /^[لبفسويتنامك]/i, "");     // single letter prefixes، added م for مفعلل
+			if (stem.length == 6 ) { 
+				stem = stem.replace( /^(..)ا(.)ي(.)$/i, "$1$2$3"); // فعاليل
+				
+			}
+			//return stem;
+		}
+	}
+
+	if (stem.length == 5) { 
+		stem = stem.replace( /^ا(.)[اتط](.)(.)$/i, "$1$2$3");  //   افتعل   -  افاعل
+		stem = stem.replace( /^م(.)(.)[يوا](.)$/i, "$1$2$3"); //   مفعول  -   مفعال  -   مفعيل
+		stem = stem.replace( /^[اتم](.)(.)(.)ة$/i, "$1$2$3"); //   مفعلة  -    تفعلة   -  افعلة
+		stem = stem.replace( /^[يتم](.)[تط](.)(.)$/i, "$1$2$3"); //   مفتعل  -    يفتعل   -  تفتعل
+		stem = stem.replace( /^[تم](.)ا(.)(.)$/i, "$1$2$3");  //   مفاعل  -  تفاعل
+		stem = stem.replace( /^(.)(.)[وا](.)ة$/i, "$1$2$3");  //   فعولة  -   فعالة
+		stem = stem.replace( /^[ما]ن(.)(.)(.)$/i, "$1$2$3");  //   انفعل   -   منفعل
+		stem = stem.replace( /^ا(.)(.)ا(.)$/i, "$1$2$3");     //    افعال
+		stem = stem.replace( /^(.)(.)(.)ان$/i, "$1$2$3");     //    فعلان
+		stem = stem.replace( /^ت(.)(.)ي(.)$/i, "$1$2$3");     //    تفعيل
+		stem = stem.replace( /^(.)ا(.)و(.)$/i, "$1$2$3");     //    فاعول
+		stem = stem.replace( /^(.)وا(.)(.)$/i, "$1$2$3");     //    فواعل
+		stem = stem.replace( /^(.)(.)ائ(.)$/i, "$1$2$3");     //    فعائل
+		stem = stem.replace( /^(.)ا(.)(.)ة$/i, "$1$2$3");     //    فاعلة
+		stem = stem.replace( /^(.)(.)ا(.)ي$/i, "$1$2$3");     //    فعالي
+		if (stem.length == 3 ) { return stem; }
+		else {
+			stem = stem.replace( /^[اتم]/i, ""); //    تفعلل - افعلل - مفعلل
+
+			stem = stem.replace( /[ةهيكتان]$/i, "");     // single letter suffixes
+			//if (stem.length == 4 ) { TODO: initiate 4 letter word routine? }
+			stem = stem.replace( /^(..)ا(..)$/i, "$1$2");     //    فعالل
+			stem = stem.replace( /^(...)ا(.)$/i, "$1$2");     //    فعلال
+			stem = stem.replace( /^[لبفسويتنامك]/i, "");     // single letter prefixes، added م for مفعلل
+			//return stem;
+		}
+	}
+
+	if (stem.length == 4) { 
+		stem = stem.replace( /^م(.)(.)(.)$/i, "$1$2$3");     // مفعل
+		stem = stem.replace( /^(.)ا(.)(.)$/i, "$1$2$3");     // فاعل
+		stem = stem.replace( /^(.)(.)[يوا](.)$/i, "$1$2$3"); // فعال   -   فعول    - فعيل
+		stem = stem.replace( /^(.)(.)(.)ة$/i, "$1$2$3");     // فعلة
+		if (stem.length == 3 ) { return stem; }
+		else {
+			stem = stem.replace( /^(.)(.)(.)[ةهيكتان]$/i, "$1$2$3");     // single letter suffixes
+			if (stem.length == 3 ) { return stem; }
+			stem = stem.replace( /^[لبفسويتناك](.)(.)(.)$/i, "$1$2$3");     // single letter prefixes
+			return stem;
+		}
+	}
+
+
+	/*
+		Filter candidate_roots through known possible roots
+	*/
+	return stem
+}
+
+
 
 </script>
 <!-- now try to load all the dictionaries -->
