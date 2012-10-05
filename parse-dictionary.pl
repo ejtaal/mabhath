@@ -84,7 +84,7 @@ LINE: while (<STDIN>) {
 				# Same entry encountered again
 				print "E ($le)($entry) $line_no_fmt: $line\n";
 				# This line should then be appended to the entry
-				$dict_entries{$entry}{'text'} .= $line;
+				$dict_entries{$entry}{'text'} .= $line."\n";
 				next LINE;
 			} 
 			else {
@@ -102,7 +102,7 @@ LINE: while (<STDIN>) {
 	if ( $entry_found == 1 ) {
 		my $le = sprintf "%01d", length $entry;
 		print "c ($le)($entry) $line_no_fmt: $line\n";
-		$dict_entries{$last_entry}{'text'} .= $line;
+		$dict_entries{$last_entry}{'text'} .= $line."\n";
 	}
 	else { print "- $line_no_fmt: $line\n"; }
 }

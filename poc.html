@@ -15,6 +15,11 @@ hr { margin: 5px; }
 .c_word {
 	border: 1px silver solid;
 }
+
+.arabic {
+	direction: rtl;
+}
+
 </style>
 <meta name='viewport' content='width=device-width'/>  
 </head>
@@ -33,18 +38,31 @@ http://www.openjs.com/scripts/events/keyboard_shortcuts/
 <textarea rows=10 cols=100 id=debug style='height: auto; float: bottom; bottom: 0; position: fixed; background-color: #ffd; z-index: 999;'>
 </textarea>
 
+Type here to search for an arabic root:
+<input type=text id='mainsearch' size=40 value="وكر"></input>
+
+<div id='maindiv'>
+
+<div id=header style=" font-size: larger; float: right; ">
+The Word
+</div>
+
+<div id='maincontent'>
+</div>
+
+</div>
+
 <div id=text style=' display: none;'>
 This is some text. Try clicking on a word.
 كتب ضرب ملك شرح نصح كور وكر
+
+موضعه
 
 روه ريغ
 </div>
 
 <hr>
 
-<div id=header style=" font-size: larger; float: right; ">
-The Word
-</div>
 <div id='main'>
 </div>
 
@@ -90,6 +108,12 @@ var dictionaries = new Array();
 // Load initial test data:
 $("#main").text( $("#text").text() );
 
+$('#mainsearch').keypress(function(e)
+        {
+            code= (e.keyCode ? e.keyCode : e.which);
+            if (code == 13) set_main_search();
+        });
+
 spanify_text( '#main', current_layer);
 parse_hash();
 //window.location.hash = "#";
@@ -103,6 +127,12 @@ $(window).hashchange( function(){
 
 // ========= End of main() =========
 // Only subroutines below. Beware!
+
+function set_main_search() {
+	var dict_contents = get_dict_contents( $('#mainsearch').val(), "lisan");
+	$('#maincontent').html( dict_contents.html);
+	spanify_text( '#maincontent', 0);
+}
 
 function register_dictionary( index, shortname, displayname, dirname, description) {
 	//debug( name);
@@ -189,6 +219,7 @@ function create_layer( zindex, clicked_word, word_on_top ) {
 		$('body').append("<div id=" + new_layer + "></div>");
 		$("#" + new_layer).html($("#template").html());
 		$("#" + new_layer + " span.text" ).html( layer_contents);
+		$("#" + new_layer + " span.text" ).addClass( 'arabic');
 		$("#" + new_layer + " span.choice" ).text( word_on_top);
 		$("#" + new_layer + " span.choice" ).css( 'border', '3px solid ' + layer_colors[zindex]);
 		spanify_text( "#" + new_layer + " span.text", zindex);
@@ -289,6 +320,7 @@ function get_dict_contents( word, which_dictionaries) {
 		*/
 	}
 	debug( 'hits: ' + hits);
+	html_to_return = html_to_return.replace( /\n/g, '<br>');
 	return {
 		'hits': hits,
 		'html': html_to_return
@@ -413,7 +445,7 @@ function stem( input) {
 	debug( 'step 4. : ' + stem);
 	// Stemming step 5. normalize initial hamza to bare alif
 	if (stem.length >= 4) { stem = stem.replace( /^[آأإ]/i, 'ا'); }
-																									debug( 'step 5. : ' + stem);
+	debug( 'step 5. : ' + stem);
 	if (stem.length <= 3) {
 		return stem;
 	}
@@ -445,6 +477,7 @@ function stem( input) {
 			//return stem;
 		}
 	}
+	debug( 'after length 6 : ' + stem);
 
 	if (stem.length == 5) { 
 		stem = stem.replace( /^ا(.)[اتط](.)(.)$/i, "$1$2$3");  //   افتعل   -  افاعل
@@ -474,6 +507,7 @@ function stem( input) {
 			//return stem;
 		}
 	}
+	debug( 'after length 5 : ' + stem);
 
 	if (stem.length == 4) { 
 		stem = stem.replace( /^م(.)(.)(.)$/i, "$1$2$3");     // مفعل
@@ -485,9 +519,19 @@ function stem( input) {
 			stem = stem.replace( /^(.)(.)(.)[ةهيكتان]$/i, "$1$2$3");     // single letter suffixes
 			if (stem.length == 3 ) { return stem; }
 			stem = stem.replace( /^[لبفسويتناك](.)(.)(.)$/i, "$1$2$3");     // single letter prefixes
-			return stem;
+			//return stem;
 		}
 	}
+	debug( 'after length 4 : ' + stem);
+/*
+	TODO
+	var matches = new array();
+	var possible_roots = new array();
+	if ( matches = stem.match( /(.)ئ(.)/)) {
+		possible_roots[] = $matches[0] + 'و' + $matches[1];
+		possible_roots[] = $matches[0] + 'ي' + $matches[1];
+	}
+*/
 
 
 	/*
