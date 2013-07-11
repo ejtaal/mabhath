@@ -31,6 +31,7 @@ http://www.openjs.com/scripts/events/keyboard_shortcuts/
 <script type="text/javascript" src="jslib/jquery.ba-hashchange.min.js"></script>
 <script type="text/javascript" src="jslib/shortcut.js"></script>
 <script type="text/javascript" src="jslib/xregexp-all-min.js"></script>
+<script type="text/javascript" src="jsastem.js"></script>
 <!--
 <script type="text/javascript" src="aa-ll-data.js"></script>
 <script type="text/javascript" src="aa-ls-data.js"></script>
@@ -146,7 +147,7 @@ function register_dictionary( index, shortname, displayname, dirname, descriptio
 function set_layer( word, zindex) {
 	layers[zindex] = []; //empty or create
 	layers[zindex][0] = $(word).attr('id');
-	var stemmed_word = stem( $(word).text());
+	var stemmed_word = jsastem( $(word).text());
 	debug( 'Stem result: ' + $(word).text() + ' -> ' + stemmed_word);
 	layers[zindex][1] = stemmed_word
 	//layers[zindex][2] = stem($(word).text());
@@ -424,7 +425,8 @@ function dump(arr,level) {
 	}
 	return dumped_text;
 }
-
+/*
+//See jsastem.js for this now
 function stem( input) {
 	var showdebug = 1;
 	var stem = input;
@@ -539,6 +541,7 @@ function stem( input) {
 	*/
 	return stem
 }
+*/
 
 
 
