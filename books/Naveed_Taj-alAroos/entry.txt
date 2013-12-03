@@ -1,0 +1,8 @@
+#Example line indicating an entry:
+#<بتأ>
+^<(\p{Arabic}+)>$
+#([\pM\p{Arabic})
+#^.*$
+#^([\p{L}]{1,5})$
+#^([^\d]{1,5})$
+#
