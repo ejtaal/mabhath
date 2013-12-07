@@ -19,6 +19,9 @@ my @strings =
 		#"اخر شربة تشربها",
 		"آخِرَ شَرْبةً تَشْرَبُها ضَياحٌ؛ الضَّيَاحُ والضَّيْحُ",
 		"\x{5fcd}ãκς,πμ,πλ+lsctzùïåé}àÀâÂäçéÉèÈêÊëîïôùÙûüÜがぎぐげご½",
+		"أَبَدَ الآبِدِينَ, see أَبَدٌ ابر",
+		#"",
+		#"",
 		#"",
 		#"",
 	);
@@ -90,6 +93,34 @@ foreach my $s (@strings) {
 foreach my $s (@strings) {
 	use bytes;
 	explain( "4. the length in bytes of the string i.e. use bytes; length():", $s, length( $s));
+}
+
+print "\n\n==== Regular expression properties: ===\n\n";
+#my @matches =
+#	(
+#		'[^\p{Arabic}]',
+#		'[^\p{M}]',
+#		'[^\p{L}]'
+#		#"",
+#		#"",
+#	);
+my @matches =
+	(
+		'\p{Arabic}',
+		'\p{M}',
+		'\p{L}'
+		#"",
+		#"",
+	);
+
+foreach my $m (@matches) {
+	foreach my $s (@strings) {
+		my $r = $s;
+		my $e = qr/$m/;
+		#$r =~ s/$e//g;
+		$r =~ s/($e)/>$1/g;
+		print "match: $m, string: $s\nresult: $r\n\n";
+	}
 }
 
 

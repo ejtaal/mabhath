@@ -1,3 +1,4 @@
+# book: ta_nvd
 #Example line indicating an entry:
 #<بتأ>
 ^<(\p{Arabic}+)>$
